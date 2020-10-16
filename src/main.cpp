@@ -12,7 +12,7 @@ int main(int argc, char *argv[]){
     printf("\e[0m\e[0m");
 
     for(int i=0; i<argc; i++) {
-        printf("receive !! > %s \n",argv[i]);
+        printf("receive ! > %s \n",argv[i]);
     }
     return 0;
 }
