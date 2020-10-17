@@ -1,18 +1,31 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <list>
+#include <string>
+#include <iostream>
+#include "mtxtprot.h"
 
 #define clr             "\e[2J"
 
+CLineMgr* cmng;
+
+static std::list<std::string> filemap;
+
 int main(int argc, char *argv[]){
+
+    if(argc != 2){
+        printf("[error]illeagal args\n");
+    }
+
+    cmng = new CLineMgr();
+    cmng->openfile(argv[1]);
 
     printf(clr);                // 画面クリア
     printf("\e[1;1H");          // カーソルを左上に
-    printf("\e[31m\e[47m");     // color　文字を赤、波形を白に
-    printf("hello,world!\n");   
-    printf("\e[0m\e[0m");
 
-    for(int i=0; i<argc; i++) {
-        printf("receive > %s \n",argv[i]);
-    }
+    do {
+        std::cout << cmng->GetCurrentLine() << std::endl;
+    } while(cmng->MoveToNextLine());
+
     return 0;
 }
