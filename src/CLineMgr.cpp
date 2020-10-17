@@ -17,6 +17,7 @@ bool CLineMgr::openfile(std::string filename){
     }
 
     m_itrCurrentLine = m_editbuf.begin();
+    m_CurrentLine = 0;
 
     return true;
 }
@@ -35,6 +36,7 @@ bool CLineMgr::openfile(char* filename){
     }
 
     m_itrCurrentLine = m_editbuf.begin();
+    m_CurrentLine = 0;
     
     return true;
 }
@@ -52,6 +54,7 @@ bool CLineMgr::MoveToNextLine(){
     }
     
     m_itrCurrentLine++;
+    ++m_CurrentLine;
     return true;
 }
 
@@ -61,5 +64,33 @@ bool CLineMgr::MoveToPreviousLine(){
     }
 
     m_itrCurrentLine--;
+    --m_CurrentLine;
     return true;
+}
+
+bool CLineMgr::SetCurrentLine(int CurrentLineNo){
+
+    // エラーチェック
+    int maxline = (int)m_editbuf.size();
+    if(maxline < CurrentLineNo) return false;
+    if(CurrentLineNo < 0) return false;
+
+    auto itr = m_editbuf.begin();
+    int i = 0;
+    for(;itr != m_editbuf.end(); ++itr){
+        if(i == CurrentLineNo)
+            break;
+        ++i;
+    }
+    m_itrCurrentLine = itr;
+    m_CurrentLine = CurrentLineNo;
+    return true;
+}
+
+int CLineMgr::GetCurrentLineNo(){
+    return m_CurrentLine;
+}
+
+int CLineMgr::GetLineNum(){
+    return (int)m_editbuf.size();
 }

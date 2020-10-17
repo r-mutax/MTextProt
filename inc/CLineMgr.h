@@ -17,4 +17,7 @@ public:
     std::string GetCurrentLine();
     bool MoveToNextLine();
     bool MoveToPreviousLine();
+    bool SetCurrentLine(int CurrentLineNo);
+    int GetCurrentLineNo();
+    int GetLineNum();
 };

@@ -1,31 +1,26 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <list>
-#include <string>
-#include <iostream>
 #include "mtxtprot.h"
-
-#define clr             "\e[2J"
-
-CLineMgr* cmng;
-
-static std::list<std::string> filemap;
+#include "CEditEngine.h"
 
 int main(int argc, char *argv[]){
 
+    // stage 0 エラーチェック
     if(argc != 2){
         printf("[error]illeagal args\n");
+        return -1;
     }
 
-    cmng = new CLineMgr();
-    cmng->openfile(argv[1]);
+    CEditEngine cedit(argv[1]);
+    cedit.run();
 
-    printf(clr);                // 画面クリア
-    printf("\e[1;1H");          // カーソルを左上に
-
-    do {
-        std::cout << cmng->GetCurrentLine() << std::endl;
-    } while(cmng->MoveToNextLine());
+    // char c;
+    // while((c = getchar()) != QUIT_CHAR){
+    //     if(isprint(c)){
+    //         putchar(c);
+    //     } else {
+    //         printf("<%02x>",c);
+    //         if(c == '\n') fputs("\r\n",stdout);
+    //     }
+    // }
 
     return 0;
 }
