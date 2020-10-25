@@ -1,5 +1,5 @@
 #include "mtxtprot.h"
-#include "CEditEngine.h"
+#include "CEditControl.h"
 
 int main(int argc, char *argv[]){
 
@@ -9,18 +9,13 @@ int main(int argc, char *argv[]){
         return -1;
     }
 
-    CEditEngine cedit(argv[1]);
+    CEditControl cedit;
+    if(argc > 1){
+        // 第2引数 = ファイル名があるなら
+        cedit.set_filename(argv[1]);
+    }
+    
     cedit.run();
-
-    // char c;
-    // while((c = getchar()) != QUIT_CHAR){
-    //     if(isprint(c)){
-    //         putchar(c);
-    //     } else {
-    //         printf("<%02x>",c);
-    //         if(c == '\n') fputs("\r\n",stdout);
-    //     }
-    // }
 
     return 0;
 }
