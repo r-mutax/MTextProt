@@ -72,18 +72,17 @@ bool CLineMgr::SetCurrentLine(int CurrentLineNo){
 
     // エラーチェック
     int maxline = (int)m_editbuf.size();
-    if(maxline < CurrentLineNo) return false;
+    if(maxline <= CurrentLineNo) return false;
     if(CurrentLineNo < 0) return false;
 
     auto itr = m_editbuf.begin();
-    int i = 0;
-    for(;itr != m_editbuf.end(); ++itr){
-        if(i == CurrentLineNo)
-            break;
-        ++i;
+
+    for(int i = 0; i < CurrentLineNo; ++i){
+        ++itr;
     }
+
     m_itrCurrentLine = itr;
-    m_CurrentLine = CurrentLineNo;
+    m_CurrentLine = CurrentLineNo - 1;
     return true;
 }
 

@@ -2,6 +2,8 @@
 
 #define QUIT_CHAR 0x04 /* CTRL-D を押すと終了する．*/
 
+typedef std::list<std::string> LINES;
+
 enum ED_MESSAGE{
     FILE_OPEN = 0
     ,FILE_CLOSE
@@ -17,15 +19,12 @@ typedef struct _message{
 class CEditEngine{
     CLineMgr* m_cmng;
     int m_pageline;
-
-    void disp_sub(int StartLine, int dispLineNum);
+    int m_CurrentLine;  // 表示中の1行目
 
 public:
     CEditEngine(char* filename);
     ~CEditEngine(){};
-    void disp(int StartLine, int dispLineNum);
-    void disp();
     void SetPageHeight(int height);
-    void PageUp();
-    void PageDown();
+    void GetLines(LINES &buf, int iStartLine, int iDispLineNum);
+    long GetLineNum();
 };

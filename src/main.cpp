@@ -4,7 +4,7 @@
 int main(int argc, char *argv[]){
 
     // stage 0 エラーチェック
-    if(argc != 2){
+    if(argc < 2){
         printf("[error]illeagal args\n");
         return -1;
     }

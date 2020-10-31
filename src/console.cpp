@@ -29,3 +29,15 @@ void EndConsoleOperation(){
     InitConsoleOperation();
     tcsetattr(STDIN_FILENO, 0, &CookedTermIos);
 }
+
+bool GetConsoleSize(MSize* ms){
+    struct winsize ws;
+    bool ret = false;
+
+     if( ioctl( STDOUT_FILENO, TIOCGWINSZ, &ws ) != -1 ) {
+        ms->iHeight = ws.ws_row;
+        ms->iWidth = ws.ws_col;
+        ret = true;
+    }
+    return ret;
+}
