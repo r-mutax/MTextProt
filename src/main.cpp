@@ -1,4 +1,5 @@
 #include "mtxtprot.h"
+#include "message.h"
 #include "CEditControl.h"
 
 int main(int argc, char *argv[]){
@@ -8,6 +9,8 @@ int main(int argc, char *argv[]){
         printf("[error]illeagal args\n");
         return -1;
     }
+
+    //PrepareMessageLoop();
 
     CEditControl cedit;
     if(argc > 1){

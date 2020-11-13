@@ -2,6 +2,8 @@
 #include <fstream>
 #include <string>
 #include <list>
+#include "mtxtprot.h"
+
 
 // エディタ用バッファ管理クラス
 class CLineMgr{

@@ -1,10 +1,10 @@
 # -Wall -Wextra -Winit-self -Wno-missing-field-initializers
 COMPILER	= g++
-CFLAGS    = -g -MMD -MP
+CFLAGS    = -g -MMD -MP -std=c++17
 ifeq "$(shell getconf LONG_BIT)" "64"
-  LDFLAGS =
+  LDFLAGS = -pthread 
 else
-  LDFLAGS =
+  LDFLAGS = -pthread 
 endif
 INCDIR		= -I./inc
 TARGET		= ./bin/$(shell basename `readlink -f .`)

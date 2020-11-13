@@ -1,4 +1,5 @@
 #include "CLineMgr.h"
+#include "mtxtprot.h"
 
 #define QUIT_CHAR 0x04 /* CTRL-D を押すと終了する．*/
 
@@ -24,7 +25,6 @@ class CEditEngine{
 public:
     CEditEngine(char* filename);
     ~CEditEngine(){};
-    void SetPageHeight(int height);
     void GetLines(LINES &buf, int iStartLine, int iDispLineNum);
     long GetLineNum();
 };

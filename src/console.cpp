@@ -41,3 +41,12 @@ bool GetConsoleSize(MSize* ms){
     }
     return ret;
 }
+
+bool ChkConsoleSizeChange(MSize& bef, MSize& cur){
+
+    bool ret = false;
+    if(bef.iHeight != cur.iHeight || bef.iWidth != cur.iWidth){
+        ret = true;
+    }
+    return ret;
+}

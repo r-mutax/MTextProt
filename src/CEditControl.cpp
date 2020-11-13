@@ -1,15 +1,24 @@
 #include "CEditControl.h"
 #include "console.h"
+#include "message.h"
 
 #define clr             "\e[2J"
 
+// ---------------------------
+// コンストラクタ
+// ---------------------------
 CEditControl::CEditControl() : m_mode(COMMAND_MODE){
     m_cediteng = nullptr;
     m_filename = nullptr;
     m_iStartLine = 0;
+    m_cursor.iRow = 2;
+    m_cursor.iColumn = 1;
     update_winsize();
 }
 
+// ---------------------------
+// ファイル名を設定する
+// ---------------------------
 bool CEditControl::set_filename(char* filename){
     if(m_filename != nullptr){
         return false;
@@ -18,6 +27,9 @@ bool CEditControl::set_filename(char* filename){
     return true;
 }
 
+// ---------------------------
+// 実行
+// ---------------------------
 void CEditControl::run(){
 
     if(m_cediteng == nullptr){
@@ -28,11 +40,63 @@ void CEditControl::run(){
 
     StartConsoleOperation();
 
+    //message_loop();
     command_loop();
 
-    EndConsoleOperation();    
+    EndConsoleOperation();
+    disp_clear();
+    m_cursor.iRow = 1;
+    m_cursor.iRow = 1;
+    disp_cursor();
 }
 
+void CEditControl::message_loop(){
+
+    MESSAGE msg;
+    // msg_id が 0(= MM_QUIT)になったらループを抜けて終了する
+    while(int msg_id = GetMessage(msg) != MM_QUIT){
+        if(msg_id == MM_ERROR){
+            // エラー処理を入れる
+        }
+        message_procedure(msg);
+    }
+}
+
+void CEditControl::message_procedure(MESSAGE& msg){
+    
+    switch(msg.id){
+        case MM_KEYPRESS:
+        {
+            KEY keydev = std::any_cast<KEY>(msg.info);
+            OnKeyPress(keydev);
+            break;
+        }
+        case MM_CHANGE_WINSIZE:
+        {
+            MSize ms = std::any_cast<MSize>(msg.info);
+            OnChangeWindowSize(ms);
+           break;
+        }
+        default:
+            break;
+    }
+}
+
+void CEditControl::OnChangeWindowSize(MSize& ms){
+    m_iPageLine = ms.iHeight - 2;
+    m_iConsoleRows = ms.iHeight;
+    m_iConsoleColumns = ms.iWidth;
+
+    disp();
+}
+
+void CEditControl::OnKeyPress(KEY& key){
+
+}
+
+// ---------------------------
+// ウィンドウのサイズを更新する
+// ---------------------------
 void CEditControl::update_winsize(){
 
     MSize ms;
@@ -46,6 +110,9 @@ void CEditControl::update_winsize(){
     }
 }
 
+// // -----------------------------
+// // キー入力を受け付けてループする
+// // -----------------------------
 void CEditControl::command_loop(){
     char input_key;
 
@@ -54,18 +121,35 @@ void CEditControl::command_loop(){
     while(input_key = getchar()){
 
         update_winsize();
-
-        if(m_mode == COMMAND_MODE){
-            keygen_command_mode(input_key);
-        } else if(m_mode == INSERT_MODE){
-            keygen_insert_mode(input_key);
-        } else {
+        if(!keygen(input_key))
             break;
-        }
     }
 }
 
-// コマンドモードでのキー処理
+// ---------------------------
+// キー処理
+// ---------------------------
+bool CEditControl::keygen(char key){
+    if(m_mode == COMMAND_MODE){
+        keygen_command_mode(key);
+    } else if(m_mode == INSERT_MODE){
+        keygen_insert_mode(key);
+    } else if(m_mode == DEBUG_MODE){
+        if(key == 0x1b){
+            m_mode = COMMAND_MODE;
+            disp();
+        }
+        return false;
+    } else {
+        return false;
+    }
+
+    return true;
+}
+
+// ---------------------------
+// コマンドモード中のキー処理
+// ---------------------------
 void CEditControl::keygen_command_mode(char key){
 
     switch(key){
@@ -79,7 +163,9 @@ void CEditControl::keygen_command_mode(char key){
     }
 }
 
+// ---------------------------
 // 挿入モードでのキー処理
+// ---------------------------
 void CEditControl::keygen_insert_mode(char key){
 
     switch(key){
@@ -89,13 +175,31 @@ void CEditControl::keygen_insert_mode(char key){
     }
 }
 
+// ----------------------------
 // 共通のキー処理
+// ----------------------------
 void CEditControl::keygen_commonkey(char key){
     switch (key)
     {
-        case 0x1b:
-            m_mode = COMMAND_MODE;
-            disp();
+        case 'd':
+            m_mode = DEBUG_MODE;
+            break;
+        case 0x1b:  // ESC
+            {
+                // ここでタイマ割り込みをしないといけないのでは？
+                char next_key = getchar();
+                char next_next_key = getchar();
+                if(next_key == 0x5b && isArrowKey(next_next_key)){
+                    move_cursor(next_next_key);
+                } else {
+                    // カーソルキーじゃなかったら、エスケープの処理をして
+                    // 先読みしたキーふたつを流す。
+                    m_mode = COMMAND_MODE;
+                    disp();
+                    keygen(next_key);
+                    keygen(next_next_key);
+                }
+            }
             break;
         case QUIT_CHAR:
             m_mode = QUIT_OPERATION;
@@ -111,6 +215,9 @@ void CEditControl::keygen_commonkey(char key){
     }
 }
 
+// -----------------------------
+// ページダウン
+// -----------------------------
 void CEditControl::PageDown(){
 
     int nextStartLine = m_iStartLine + m_iPageLine;
@@ -121,6 +228,10 @@ void CEditControl::PageDown(){
     disp(nextStartLine, m_iPageLine);
 
 }
+
+// ---------------------------
+// ページアップ
+// ---------------------------
 void CEditControl::PageUp(){
 
     int nextStartLine = m_iStartLine - m_iPageLine;
@@ -130,14 +241,23 @@ void CEditControl::PageUp(){
     disp(nextStartLine, m_iPageLine);
 }
 
+// ---------------------------
+// 画面描画（範囲指定なし）
+// ---------------------------
 void CEditControl::disp(int StartLine, int dispLineNum){
     disp_sub(StartLine, dispLineNum);
 }
 
+// ---------------------------
+// 画面描画（範囲指定あり）
+// ---------------------------
 void CEditControl::disp(){
     disp_sub(m_iStartLine, m_iPageLine);
 }
 
+// ---------------------------
+// 画面描画サブ
+// ---------------------------
 void CEditControl::disp_sub(int StartLine, int dispLineNum){
 
     // 現在の開始行の更新
@@ -145,7 +265,7 @@ void CEditControl::disp_sub(int StartLine, int dispLineNum){
     LINES buf;
     m_cediteng->GetLines(buf, StartLine, dispLineNum);
 
-    printf(clr);
+    disp_clear();
 
     // step1 編集中のファイル名の表示
     disp_filename();
@@ -157,8 +277,12 @@ void CEditControl::disp_sub(int StartLine, int dispLineNum){
 
     disp_mode();
 
+    disp_cursor();
 }
 
+// ---------------------------
+// ファイル名表示用文字列の作成
+// ---------------------------
 std::string CEditControl::GetFileDispName(){
     std::string DispFileName;
     std::stringstream ss;
@@ -171,6 +295,9 @@ std::string CEditControl::GetFileDispName(){
     return DispFileName;
 }
 
+// ---------------------------
+// ファイル名の表示を行う
+// ---------------------------
 void CEditControl::disp_filename(){
     std::string dispName = GetFileDispName();
     printf("\e[1;1H");
@@ -181,6 +308,9 @@ void CEditControl::disp_filename(){
     printf("\033[49m");
 }
 
+// ---------------------------
+// 編集モードの表示を行う
+// ---------------------------
 void CEditControl::disp_mode(){
     std::string mode;
     if(m_mode == COMMAND_MODE){
@@ -193,4 +323,66 @@ void CEditControl::disp_mode(){
     printf("\e[%ld;%dH", m_iConsoleRows, iCursorPos);
     std::cout << mode;
     printf("\e[%ld;1H", m_iConsoleRows);
+}
+
+// ---------------------------
+// カーソルを現在位置に表示する
+// ---------------------------
+void CEditControl::disp_cursor(){
+    printf("\e[%d;%dH", m_cursor.iRow, m_cursor.iColumn);   
+}
+
+// ---------------------------
+// 表示をクリアする
+// ---------------------------
+void CEditControl::disp_clear(){
+    printf(clr);
+}
+
+// ---------------------------
+// カーソルを動かす
+// ---------------------------
+void CEditControl::move_cursor(char dir){
+    switch(dir){
+        case UP: // up
+            m_cursor.iRow -= 1;
+            disp_cursor();
+            break;
+        case DOWN: // down
+            m_cursor.iRow++;
+            disp_cursor();
+            break;
+        case RIGHT: // right
+            m_cursor.iColumn++;
+            disp_cursor();
+            break;
+        case LEFT: // left
+            m_cursor.iColumn = -1;
+            disp_cursor();
+            break;
+        default:
+            break;
+    }
+}
+
+// ---------------------------
+// 方向キー？
+// ---------------------------
+bool CEditControl::isArrowKey(char dir){
+    
+    bool ret = false;
+
+    switch(dir){
+        case UP:
+        case DOWN:
+        case RIGHT:
+        case LEFT:
+            ret = true;
+            break;
+        default:
+            break;
+    }
+
+    return ret;
+
 }
