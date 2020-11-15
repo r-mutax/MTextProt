@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <any>
 
+#include "vkeycode.h"
+
 // 位置系定義
 typedef struct _MPos {
     int iRow;
