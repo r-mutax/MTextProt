@@ -14,7 +14,7 @@ OBJDIR		= ./load
 OBJECTS		= $(addprefix $(OBJDIR)/,$(notdir $(SOURCES:.cpp=.o)))
 DEPENDS   	= $(OBJECTS:.o=.d)
 
-$(TARGET): $(OBJECTS)
+$(TARGET).o: $(OBJECTS)
 		$(COMPILER) -o $@ $^ $(LDFLAGS)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp

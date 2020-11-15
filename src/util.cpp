@@ -10,38 +10,6 @@
 
 #include "util.h"
 
-//-----------------------------------------------------------------
-// タイムアウト付き文字入力
-//-----------------------------------------------------------------
-int getchar_w(int timeout, bool& endflg)
-{
-    char c = 0;
-    struct sigaction sa;
-    struct itimerval itimer;
-
-    endflg = true;
-
-    // シグナルハンドラの設定
-
-    if(sigaction(SIGALRM, nullptr, nullptr) != 0){
-        //perror("sigaction");
-        return 0;
-    }
-    // タイマーの設定
-    itimer.it_value.tv_sec  = itimer.it_interval.tv_sec  = 0; // sec
-    itimer.it_value.tv_usec = itimer.it_interval.tv_usec = timeout; // micro sec
-    if(setitimer(ITIMER_REAL, &itimer, NULL) < 0) {
-        //perror("setitimer");
-        return 0;
-    }
-    // １文字入力
-    read(1,&c,1);
-
-    endflg = false;
-    
-    return c;
-}
-
 void getchar_t(std::promise<char> p){
     char c = getchar();
     p.set_value(c);

@@ -41,7 +41,7 @@ MESSAGE_ID GetMessage(MESSAGE& msg){
             break;
         } else {
             // 30ミリ秒sleepする
-            //nanosleep(30000);
+            usleep(30000);
         }
 
         mtx.unlock();
@@ -52,16 +52,6 @@ MESSAGE_ID GetMessage(MESSAGE& msg){
 void SendMessage(MESSAGE& msg){
     std::lock_guard<std::mutex>    ul(mtx);
     message_nsp::msg_pool.push(msg);
-#define DEBUG
-#ifdef DEBUG
-    FILE* fp;
-    fp = fopen("log.text","a");
-    if(fp){
-        fseek(fp, 0, SEEK_SET);
-        fprintf(fp, "%d\r\n", msg.id);
-        fclose(fp);
-    }
-#endif
 }
 
 void PrepareMessageLoop(){
