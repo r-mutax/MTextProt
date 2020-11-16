@@ -28,8 +28,9 @@ enum MESSAGE_ID{
 };
 
 typedef struct MESSAGE{
-    MESSAGE_ID id;
-    std::any    info;
+    MESSAGE_ID  id;
+    long        lParam;
+    long        wParam;
 } MESSAGE;
 
 typedef struct _KEY{

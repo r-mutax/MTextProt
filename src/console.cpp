@@ -28,6 +28,8 @@ void StartConsoleOperation(){
 void EndConsoleOperation(){
     InitConsoleOperation();
     tcsetattr(STDIN_FILENO, 0, &CookedTermIos);
+
+    tcflush(0, TCIFLUSH);
 }
 
 bool GetConsoleSize(MSize* ms){

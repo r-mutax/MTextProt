@@ -4,6 +4,6 @@
 
 
 // method
-MESSAGE_ID GetMessage(MESSAGE& msg);
-void SendMessage(MESSAGE& msg);
-void PrepareMessageLoop();
+MESSAGE_ID MMGetMessage(MESSAGE& msg);
+void MMSendMessage(MESSAGE& msg);
+void MMPrepareMessageLoop();

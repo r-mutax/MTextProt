@@ -54,7 +54,7 @@ void CEditControl::message_loop(){
 
     MESSAGE msg;
     // msg_id が 0(= MM_QUIT)になったらループを抜けて終了する
-    while(int msg_id = GetMessage(msg) != MM_QUIT){
+    while(int msg_id = MMGetMessage(msg) != MM_QUIT){
         if(msg_id == MM_ERROR){
             // エラー処理を入れる
         }
@@ -67,14 +67,14 @@ void CEditControl::message_procedure(MESSAGE& msg){
     switch(msg.id){
         case MM_KEYPRESS:
         {
-            KEY keydev = std::any_cast<KEY>(msg.info);
-            OnKeyPress(keydev);
+            //char keydev = std::any_cast<char>(msg.info);
+            //OnKeyPress(keydev);
             break;
         }
         case MM_CHANGE_WINSIZE:
         {
-            MSize ms = std::any_cast<MSize>(msg.info);
-            OnChangeWindowSize(ms);
+            //MSize ms = std::any_cast<MSize>(msg.info);
+            //OnChangeWindowSize(ms);
            break;
         }
         default:

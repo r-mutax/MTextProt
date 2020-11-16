@@ -1,12 +1,15 @@
-#include <thread>
-#include <future>
 #include <vector>
+#include <sys/ioctl.h>
+#include <unistd.h>
+
 
 #include "key.h"
+#include "mtxtprot.h"
 
-void getchar_t(std::promise<char> p){
-    char c = getchar();
-    p.set_value(c);
+bool kbhit(){
+    int byteswaiting;
+    ioctl(0, FIONREAD, &byteswaiting);
+    return byteswaiting > 0;
 }
 
 char vkcode_conv(std::vector<char> &keys){
@@ -50,34 +53,29 @@ char vkcode_conv(std::vector<char> &keys){
 
 char get_vkcode(){
 
-    bool endflg = false;
+    std::vector<char>   keybuf;
+    bool inputend = false;
 
-    std::vector<char>   keys;
-
-    do{
-        std::promise<char> p;
-        std::future<char> f = p.get_future();
-
-        std::thread t(getchar_t, std::move(p));
-
-        namespace chrono = std::chrono;
-        chrono::steady_clock::time_point tp = chrono::steady_clock::now();
-        std::future_status result = f.wait_until(tp + chrono::milliseconds(10));
-
-        if (result != std::future_status::timeout) {
-            char key = f.get();
-
-            if(key){
-                keys.emplace_back(key);
-                if((int) keys.size() > 9){
-                    break;
-                }
+    while(1){
+        if(kbhit()){
+            char key[10] = {};
+            read(0, key, 10);
+            
+            for(int i = 0; i < 10; i++){
+                if(key[i] == 0) break;
+                keybuf.emplace_back(key[i]);
             }
-        }  else {
-            endflg = true;
+        } else {
+            inputend = true;
         }
-        t.join();
-    } while(!endflg);
 
-    return vkcode_conv(keys);
+        if((inputend || (int)keybuf.size() > 9) && (int)keybuf.size() != 0){
+            break;
+        }
+
+        usleep(30000);
+    }
+
+    return vkcode_conv(keybuf);
 }
+

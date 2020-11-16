@@ -32,15 +32,15 @@ namespace message_nsp
     CMessageEngine* msg_engine;
 } // namespace msg
 
-MESSAGE_ID GetMessage(MESSAGE& msg){
+MESSAGE_ID MMGetMessage(MESSAGE& msg){
     return message_nsp::msg_engine->GetMessage(msg);
 }
 
-void SendMessage(MESSAGE& msg){
+void MMSendMessage(MESSAGE& msg){
     message_nsp::msg_engine->SendMessage(msg);
 }
 
-void PrepareMessageLoop(){
+void MMPrepareMessageLoop(){
     message_nsp::msg_engine = new CMessageEngine();
 }
 
@@ -64,28 +64,32 @@ CMessageEngine::~CMessageEngine(){
 void CMessageEngine::key_monitoring(){
 
     while(1){
+
         char input_key;
         input_key = get_vkcode();
 
         if(input_key){
             MESSAGE msg;
             msg.id = MM_KEYPRESS;
-            msg.info = input_key;
+            msg.lParam = (long)input_key;
             SendMessage(msg);
         }
     }
 }
 
 void CMessageEngine::display_monitoring(){
-    static MSize ms,bef;
+    static MSize bef,ms;
     while(1){
         GetConsoleSize(&ms);
 
         if(ChkConsoleSizeChange(bef, ms)){
             ms = bef;
             MESSAGE msg;
+            MSize* monitor_size = (MSize*)calloc(1, sizeof(MSize));
+            *monitor_size = ms;
+
             msg.id = MM_CHANGE_WINSIZE;
-            msg.info = ms;
+            msg.lParam = (long)monitor_size;
             SendMessage(msg);
         }
     }
@@ -94,6 +98,24 @@ void CMessageEngine::display_monitoring(){
 void CMessageEngine::SendMessage(MESSAGE& msg){
     std::lock_guard<std::mutex>    ul(mtx);
     m_msg_pool.push(msg);
+
+    FILE* fp;
+    fp = fopen("log.txt","a");
+
+    if(fp != nullptr){
+        fseek(fp, 0,SEEK_END);
+        char c;
+        if(msg.id == MM_KEYPRESS){
+            try{
+                c = (char)msg.lParam;
+            } catch(std::bad_any_cast& e){
+                printf("bad_any_cast");
+            }
+        }
+        fprintf(fp,"%d\r\n", c);
+        fclose(fp);
+    }
+
 }
 
 MESSAGE_ID CMessageEngine::GetMessage(MESSAGE& msg){
@@ -109,11 +131,9 @@ MESSAGE_ID CMessageEngine::GetMessage(MESSAGE& msg){
             mtx.unlock();
             break;
         } else {
-            // 30ミリ秒sleepする
+            mtx.unlock();
             usleep(30000);
         }
-
-        mtx.unlock();
     }
     return ret;
 
