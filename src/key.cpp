@@ -65,14 +65,9 @@ char get_vkcode(){
                 if(key[i] == 0) break;
                 keybuf.emplace_back(key[i]);
             }
-        } else {
-            inputend = true;
-        }
-
-        if((inputend || (int)keybuf.size() > 9) && (int)keybuf.size() != 0){
             break;
         }
-
+        
         usleep(30000);
     }
 

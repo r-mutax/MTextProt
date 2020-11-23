@@ -1,6 +1,7 @@
 #include "CEditControl.h"
 #include "console.h"
 #include "message.h"
+#include "Logger.h"
 
 #define clr             "\e[2J"
 
@@ -39,9 +40,7 @@ void CEditControl::run(){
     }
 
     StartConsoleOperation();
-
-    //message_loop();
-    command_loop();
+    message_loop();
 
     EndConsoleOperation();
     disp_clear();
@@ -67,31 +66,38 @@ void CEditControl::message_procedure(MESSAGE& msg){
     switch(msg.id){
         case MM_KEYPRESS:
         {
-            //char keydev = std::any_cast<char>(msg.info);
-            //OnKeyPress(keydev);
+            char input_key = (char)msg.lParam;
+            OnKeyPress(input_key);
             break;
         }
         case MM_CHANGE_WINSIZE:
         {
-            //MSize ms = std::any_cast<MSize>(msg.info);
-            //OnChangeWindowSize(ms);
+            MSize ms = *(MSize*)msg.lParam;
+            free((void*)msg.lParam);
+
+            OnChangeWindowSize(ms);
            break;
         }
+        case MM_PAINT:
+            OnPaint();
+            break;
         default:
             break;
     }
 }
 
+void CEditControl::OnPaint(){
+    disp();
+}
 void CEditControl::OnChangeWindowSize(MSize& ms){
     m_iPageLine = ms.iHeight - 2;
     m_iConsoleRows = ms.iHeight;
     m_iConsoleColumns = ms.iWidth;
-
-    disp();
 }
 
-void CEditControl::OnKeyPress(KEY& key){
-
+void CEditControl::OnKeyPress(char key){
+    update_winsize();
+    keygen(key);
 }
 
 // ---------------------------
@@ -104,6 +110,7 @@ void CEditControl::update_winsize(){
         m_iPageLine = ms.iHeight - 2;
         m_iConsoleRows = ms.iHeight;
         m_iConsoleColumns = ms.iWidth;
+        setvbuf(stdout, NULL, m_iConsoleColumns * m_iConsoleRows + 0x1000, _IOFBF);
     } else {
         // 取得に失敗した場合は10固定にしとく。
         m_iPageLine = 10;
@@ -184,22 +191,20 @@ void CEditControl::keygen_commonkey(char key){
         case 'd':
             m_mode = DEBUG_MODE;
             break;
-        case 0x1b:  // ESC
-            {
-                // ここでタイマ割り込みをしないといけないのでは？
-                char next_key = getchar();
-                char next_next_key = getchar();
-                if(next_key == 0x5b && isArrowKey(next_next_key)){
-                    move_cursor(next_next_key);
-                } else {
-                    // カーソルキーじゃなかったら、エスケープの処理をして
-                    // 先読みしたキーふたつを流す。
-                    m_mode = COMMAND_MODE;
-                    disp();
-                    keygen(next_key);
-                    keygen(next_next_key);
-                }
-            }
+        case VK_UP:
+            move_cursor(VK_UP);
+            break;
+        case VK_DOWN:
+            move_cursor(VK_DOWN);
+            break;
+        case VK_RIGHT:
+            move_cursor(VK_RIGHT);
+            break;
+        case VK_LEFT:
+            move_cursor(VK_LEFT);
+            break;
+        case VK_ESCAPE:  // ESC
+            m_mode = COMMAND_MODE;
             break;
         case QUIT_CHAR:
             m_mode = QUIT_OPERATION;
@@ -270,13 +275,19 @@ void CEditControl::disp_sub(int StartLine, int dispLineNum){
     // step1 編集中のファイル名の表示
     disp_filename();
 
-    printf("\e[2;1H");
+    int iRow = 2;
     for(auto str : buf){
-        std::cout << str << "\r\n";
+        // 標準出力をフルバッファリングにしているので、
+        // 自分でカーソルを動かしながら出力していく。
+        printf("\e[%d;1H", iRow);
+        printf("%s", str.c_str());
+
+        iRow++;
     }
 
     disp_mode();
 
+    // disp_cursor()でfflush()している。
     disp_cursor();
 }
 
@@ -303,7 +314,7 @@ void CEditControl::disp_filename(){
     printf("\e[1;1H");
     printf("\033[47m");
     printf("\033[34m");
-    std::cout << dispName << "\r\n";
+    printf("%s", dispName.c_str());
     printf("\033[39m");
     printf("\033[49m");
 }
@@ -320,16 +331,17 @@ void CEditControl::disp_mode(){
     }
 
     int iCursorPos = m_iConsoleColumns - (int)mode.size();
-    printf("\e[%ld;%dH", m_iConsoleRows, iCursorPos);
-    std::cout << mode;
-    printf("\e[%ld;1H", m_iConsoleRows);
+    printf("\033[%ld;%dH", m_iConsoleRows, iCursorPos);
+    printf("%s", mode.c_str());
+    printf("\033[%ld;1H", m_iConsoleRows);
 }
 
 // ---------------------------
 // カーソルを現在位置に表示する
 // ---------------------------
 void CEditControl::disp_cursor(){
-    printf("\e[%d;%dH", m_cursor.iRow, m_cursor.iColumn);   
+    printf("\033[%d;%dH", m_cursor.iRow, m_cursor.iColumn);
+    fflush(stdout);
 }
 
 // ---------------------------
@@ -344,20 +356,20 @@ void CEditControl::disp_clear(){
 // ---------------------------
 void CEditControl::move_cursor(char dir){
     switch(dir){
-        case UP: // up
+        case VK_UP: // up
             m_cursor.iRow -= 1;
             disp_cursor();
             break;
-        case DOWN: // down
+        case VK_DOWN: // down
             m_cursor.iRow++;
             disp_cursor();
             break;
-        case RIGHT: // right
+        case VK_RIGHT: // right
             m_cursor.iColumn++;
             disp_cursor();
             break;
-        case LEFT: // left
-            m_cursor.iColumn = -1;
+        case VK_LEFT: // left
+            m_cursor.iColumn -= 1;
             disp_cursor();
             break;
         default:

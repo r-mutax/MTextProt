@@ -25,6 +25,7 @@ enum MESSAGE_ID{
     , MM_QUIT = 0
     , MM_KEYPRESS
     , MM_CHANGE_WINSIZE
+    , MM_PAINT
 };
 
 typedef struct MESSAGE{

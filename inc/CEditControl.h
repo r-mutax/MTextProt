@@ -32,8 +32,9 @@ class CEditControl {
     // メッセージ - イベント関数群
     void message_loop();
     void message_procedure(MESSAGE& msg);
-    void OnKeyPress(KEY& key);
+    void OnKeyPress(char key);
     void OnChangeWindowSize(MSize& ms);
+    void OnPaint();
 
 
 

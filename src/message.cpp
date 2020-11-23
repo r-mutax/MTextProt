@@ -50,7 +50,7 @@ void MMPrepareMessageLoop(){
 
 CMessageEngine::CMessageEngine()
      : m_thread_key_monitoring(&CMessageEngine::key_monitoring, this)
-     //, m_thread_display_monitoring(&CMessageEngine::display_monitoring, this)
+     , m_thread_display_monitoring(&CMessageEngine::display_monitoring, this)
      , m_bRun(true)
 {
 }
@@ -80,42 +80,34 @@ void CMessageEngine::key_monitoring(){
 void CMessageEngine::display_monitoring(){
     static MSize bef,ms;
     while(1){
-        GetConsoleSize(&ms);
 
-        if(ChkConsoleSizeChange(bef, ms)){
-            ms = bef;
+        // winsize event
+        // GetConsoleSize(&ms);
+
+        // if(ChkConsoleSizeChange(bef, ms)){
+        //     ms = bef;
+        //     MESSAGE msg;
+        //     MSize* monitor_size = (MSize*)calloc(1, sizeof(MSize));
+        //     *monitor_size = ms;
+
+        //     msg.id = MM_CHANGE_WINSIZE;
+        //     msg.lParam = (long)monitor_size;
+        //     SendMessage(msg);
+        // }
+        // paint event
+        {
             MESSAGE msg;
-            MSize* monitor_size = (MSize*)calloc(1, sizeof(MSize));
-            *monitor_size = ms;
-
-            msg.id = MM_CHANGE_WINSIZE;
-            msg.lParam = (long)monitor_size;
+            msg.id = MM_PAINT;
             SendMessage(msg);
         }
+
+        usleep(500000);
     }
 }
 
 void CMessageEngine::SendMessage(MESSAGE& msg){
     std::lock_guard<std::mutex>    ul(mtx);
     m_msg_pool.push(msg);
-
-    FILE* fp;
-    fp = fopen("log.txt","a");
-
-    if(fp != nullptr){
-        fseek(fp, 0,SEEK_END);
-        char c;
-        if(msg.id == MM_KEYPRESS){
-            try{
-                c = (char)msg.lParam;
-            } catch(std::bad_any_cast& e){
-                printf("bad_any_cast");
-            }
-        }
-        fprintf(fp,"%d\r\n", c);
-        fclose(fp);
-    }
-
 }
 
 MESSAGE_ID CMessageEngine::GetMessage(MESSAGE& msg){
