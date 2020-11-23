@@ -45,7 +45,6 @@ class CEditControl {
     void disp_mode();
     void disp();
     void disp(int StartLine, int dispLineNum);
-    void command_loop();
 
     bool keygen(char key);
     void keygen_command_mode(char key);
@@ -57,7 +56,6 @@ class CEditControl {
     void disp_cursor();
     void disp_clear();
     void move_cursor(char dir);
-    bool isArrowKey(char dir);
 
 public:
     CEditControl();

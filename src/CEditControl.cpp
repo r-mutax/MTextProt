@@ -117,22 +117,6 @@ void CEditControl::update_winsize(){
     }
 }
 
-// // -----------------------------
-// // キー入力を受け付けてループする
-// // -----------------------------
-void CEditControl::command_loop(){
-    char input_key;
-
-    disp();
-
-    while(input_key = getchar()){
-
-        update_winsize();
-        if(!keygen(input_key))
-            break;
-    }
-}
-
 // ---------------------------
 // キー処理
 // ---------------------------
@@ -375,26 +359,4 @@ void CEditControl::move_cursor(char dir){
         default:
             break;
     }
-}
-
-// ---------------------------
-// 方向キー？
-// ---------------------------
-bool CEditControl::isArrowKey(char dir){
-    
-    bool ret = false;
-
-    switch(dir){
-        case UP:
-        case DOWN:
-        case RIGHT:
-        case LEFT:
-            ret = true;
-            break;
-        default:
-            break;
-    }
-
-    return ret;
-
 }
