@@ -23,6 +23,7 @@ class CEditControl {
     char* m_filename;
     EDIT_TYPE m_mode;
     MPos m_cursor;
+    LINES m_lines;
 
     long m_iStartLine;
     long m_iPageLine;
@@ -36,16 +37,17 @@ class CEditControl {
     void OnChangeWindowSize(MSize& ms);
     void OnPaint();
 
-
-
-
+    // 表示用関数群
     void disp_sub(int StartLine, int dispLineNum);
     std::string GetFileDispName();
     void disp_filename();
     void disp_mode();
     void disp();
     void disp(int StartLine, int dispLineNum);
+    void disp_cursor();
+    void disp_clear();
 
+    // キー操作関数群
     bool keygen(char key);
     void keygen_command_mode(char key);
     void keygen_insert_mode(char key);
@@ -53,9 +55,10 @@ class CEditControl {
     void update_winsize();
     void PageUp();
     void PageDown();
-    void disp_cursor();
-    void disp_clear();
     void move_cursor(char dir);
+
+    // CEditEngine操作関数
+    void update_lines();
 
 public:
     CEditControl();

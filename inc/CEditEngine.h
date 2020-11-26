@@ -1,9 +1,11 @@
+#include <vector>
+
 #include "CLineMgr.h"
 #include "mtxtprot.h"
 
 #define QUIT_CHAR 0x04 /* CTRL-D を押すと終了する．*/
 
-typedef std::list<std::string> LINES;
+typedef std::vector<std::string> LINES;
 
 enum ED_MESSAGE{
     FILE_OPEN = 0

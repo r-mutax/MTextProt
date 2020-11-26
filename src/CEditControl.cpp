@@ -251,8 +251,9 @@ void CEditControl::disp_sub(int StartLine, int dispLineNum){
 
     // 現在の開始行の更新
     m_iStartLine = StartLine;
-    LINES buf;
-    m_cediteng->GetLines(buf, StartLine, dispLineNum);
+
+    // 行バッファの更新
+    update_lines();
 
     disp_clear();
 
@@ -260,7 +261,7 @@ void CEditControl::disp_sub(int StartLine, int dispLineNum){
     disp_filename();
 
     int iRow = 2;
-    for(auto str : buf){
+    for(auto str : m_lines){
         // 標準出力をフルバッファリングにしているので、
         // 自分でカーソルを動かしながら出力していく。
         printf("\e[%d;1H", iRow);
@@ -359,4 +360,10 @@ void CEditControl::move_cursor(char dir){
         default:
             break;
     }
+}
+
+void CEditControl::update_lines(){
+
+    m_cediteng->GetLines(m_lines, m_iStartLine, m_iPageLine);
+
 }
